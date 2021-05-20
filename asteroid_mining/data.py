@@ -12,9 +12,9 @@ class Data:
         All files located in data/raw_data"""
 
         # Get paths
-        rootdir = os.path.dirname(os.path.dirname(__file__))
+        rootdir = os.path.dirname(__file__)
         data_path = os.path.join(rootdir, "data")
-        raw_data_path = os.path.join(data_path, "raw_data")
+        raw_data_path = os.path.join(os.path.dirname(rootdir), "raw_data")
 
         # Get raw_data
         asterank_file = os.path.join(raw_data_path, 'asterank.csv')
