@@ -1,217 +1,41 @@
 import math
-from random import uniform
+import os
+import random
+import pandas as pd
+import numpy as np
+
 from utils import clean_spec
+from asteroid_mining.parameters import Parameters
+from asteroid_mining.utils import clean_diameter_acc, clean_spec
+from asteroid_mining.data import Data
 
 class Asteroids:
+
+    def __init__(self):
+        self.df_acc = None
+        self.df_neo = None
+        self.acc_resources = None
+        self.resources_list = None
     
-    spec_per_resources = {
-    '?': {},
-    'A': {},
-    'B': {
-        'hydrogen': 0.235,
-        'nitrogen': 0.001,
-        'ammonia': 0.001,
-        'iron': 10,
-    },
-    'C': {
-        # from Keck report at http://www.kiss.caltech.edu/study/asteroid/asteroid_final_report.pdf
-        'water': .2,
-        'iron': .166,
-        'nickel': .014,
-        'cobalt': .002,
+    def get_saved_df(self):
+        """Instanciates two DataFrames if they have already been solved"""
+        self.df_acc = Data().get_acc_data()
+        self.df_neo = Data().get_neo_data()
+        pass
 
-        # volatiles
-        'hydrogen': 0.235,
-        'nitrogen': 0.001,
-        'ammonia': 0.001,
-    },
-    'Ch': {
-        # from Keck report at http://www.kiss.caltech.edu/study/asteroid/asteroid_final_report.pdf
-        'water': .2,
-        'iron': .166,
-        'nickel': .014,
-        'cobalt': .002,
-
-        # volatiles
-        'hydrogen': 0.235,
-        'nitrogen': 0.001,
-        'ammonia': 0.001,
-    },
-    'Cg': {
-        # from Keck report at http://www.kiss.caltech.edu/study/asteroid/asteroid_final_report.pdf
-        'water': .2,
-        'iron': .166,
-        'nickel': .014,
-        'cobalt': .002,
-
-        # volatiles
-        'hydrogen': 0.235,
-        'nitrogen': 0.001,
-        'ammonia': 0.001,
-    },
-    'Cgh': {
-        # from Keck report at http://www.kiss.caltech.edu/study/asteroid/asteroid_final_report.pdf
-        'water': .2,
-        'iron': .166,
-        'nickel': .014,
-        'cobalt': .002,
-
-        # volatiles
-        'hydrogen': 0.235,
-        'nitrogen': 0.001,
-        'ammonia': 0.001,
-    },
-    'C': {
-        # from Keck report at http://www.kiss.caltech.edu/study/asteroid/asteroid_final_report.pdf
-        'water': .2,
-        'iron': .166,
-        'nickel': .014,
-        'cobalt': .002,
-
-        # volatiles
-        'hydrogen': 0.235,
-        'nitrogen': 0.001,
-        'ammonia': 0.001,
-    },
-    'Cb': {   # transition object between C and B
-        # from Keck report at http://www.kiss.caltech.edu/study/asteroid/asteroid_final_report.pdf
-        'water': .1,
-        'iron': .083,
-        'nickel': .007,
-        'cobalt': .001,
-
-        # volatiles
-        'hydrogen': 0.235,
-        'nitrogen': 0.001,
-        'ammonia': 0.001,
-    },
-    'D': {
-        'water': 0.000023,
-    },
-    'E': {
-
-    },
-    'K': {  # cross between S and C
-        # from Keck report at http://www.kiss.caltech.edu/study/asteroid/asteroid_final_report.pdf
-        'water': .1,
-        'iron': .083,
-        'nickel': .007,
-        'cobalt': .001,
-
-        # volatiles
-        'hydrogen': 0.235,
-        'nitrogen': 0.001,
-        'ammonia': 0.001,
-    },
-    'L': {
-        'magnesium silicate': 1e-30,
-        'iron silicate': 0,
-        'aluminum': 7
-    },
-    'Ld': {  # copied from S
-        'magnesium silicate': 1e-30,
-        'iron silicate': 0,
-    },
-    'M': {
-        'iron': 88,
-        'nickel': 10,
-        'cobalt': 0.5,
-    },
-    'O': {
-        'nickel-iron': 2.965,
-        'platinum': 1.25,
-    },
-    'P': {  # correspond to CI, CM carbonaceous chondrites
-        'water': 12.5,
-    },
-    'R': {
-        'magnesium silicate': 1e-30,
-        'iron silicate': 0,
-    },
-    'S': {
-        'magnesium silicate': 1e-30,
-        'iron silicate': 0,
-    },
-    # Sa, Sq, Sr, Sk, and Sl all transition objects (assume half/half)
-    'Sa': {
-        'magnesium silicate': 5e-31,
-        'iron silicate': 0,
-    },
-    'Sq': {
-        'magnesium silicate': 1e-30,
-        'iron silicate': 0,
-    },
-    'Sr': {
-        'magnesium silicate': 1e-30,
-        'iron silicate': 0,
-    },
-    'Sk': {
-        'magnesium silicate': 1e-30,
-        'iron silicate': 0,
-    },
-    'Sl': {
-        'magnesium silicate': 1e-30,
-        'iron silicate': 0,
-    },
-    'S(IV)': {
-        'magnesium silicate': 1e-30,
-        'iron silicate': 0,
-    },
-    'Q': {
-        'nickel-iron': 13.315,
-    },
-    'R': {
-        'magnesium silicate': 1e-30,
-        'iron silicate': 0,
-    },
-    'T': {
-        'iron': 6,
-    },
-    'U': {
-
-    },
-    'V': {
-        'magnesium silicate': 1e-30,
-        'iron silicate': 0,
-    },
-
-    # TODO use density to decide what kind of X the object is?
-
-    'X': {  # TODO these vals only apply to M-type within X
-        'iron': 88,
-        'nickel': 10,
-        'cobalt': 0.5,
-    },
-    'Xe': {  # TODO these vals only apply to M-type within X
-        'iron': 88,
-        'nickel': 10,
-        'cobalt': 0.5,
-    },
-    'Xc': {  # TODO these vals only apply to M-type within X
-        'iron': 88,
-        'nickel': 10,
-        'cobalt': 0.5,
-        'platinum': 0.005,
-    },
-    'Xk': {  # TODO these vals only apply to M-type within X
-        'iron': 88,
-        'nickel': 10,
-        'cobalt': 0.5,
-    },
-    'comet': {
-        # no estimates for now, because assumed mass, etc. would be off
-    },
-    }
-
+    def get_df_from_scratch(self):
+        """Creates df, saves them and instantiates them in the class"""
+        Data().create_df()
+        self.get_saved_df()
+        pass
     
-    
-    def clean_accessible_database(self):
+    def get_spec(self):
+        """Gets the spec of each asteroid of the df by estimation"""
         
-        
-        df_neo['spec_B_clean'] = df_neo['spec_B'].apply(clean_spec)
-        df_acc['spec_B_clean'] = df_acc['spec_B'].apply(clean_spec)
+        self.df_neo['spec_B_clean'] = self.df_neo['spec_B'].apply(clean_spec)
+        self.df_acc['spec_B_clean'] = self.df_acc['spec_B'].apply(clean_spec)
 
-        spec_counts_neo = df_neo[['id', 'spec_B_clean']].groupby(['spec_B_clean']).count().reset_index()
+        spec_counts_neo = self.df_neo[['id', 'spec_B_clean']].groupby(['spec_B_clean']).count().reset_index()
         index_to_del = spec_counts_neo[ spec_counts_neo['spec_B_clean'] == 'nan'].index
         spec_counts_neo.drop(index_to_del , inplace=True)
 
@@ -222,7 +46,7 @@ class Asteroids:
 
         def new_spec_acc(x):
             if x == 'nan':
-                a = uniform(0,1)
+                a = random.uniform(0,1)
                 for i in range(spec_counts_neo.shape[0]):
                     if a > spec_counts_neo.loc[i, 'cum_perc_spec']:
                         continue
@@ -232,5 +56,87 @@ class Asteroids:
                 return new_spec
             else:
                 return x
-                
-        df_acc['new_spec'] = df_acc['spec_B_clean'].apply(new_spec_acc)
+      
+        self.df_acc['new_spec'] = self.df_acc['spec_B_clean'].apply(new_spec_acc)
+        pass
+
+    def compute_mass(self):
+        """Computes the mass of each asteroid of the df"""
+
+        # Estimate the % of resources for each asteroid according to its spec
+        specs_param = Parameters().spec_per_resources
+        self.acc_resources = self.df_acc[['id', 'new_spec']]
+        
+        for key in specs_param:
+            for key1 in specs_param[key]:
+                if key1 not in self.acc_resources.columns:
+                    self.acc_resources[key1] = ''
+
+        self.resources_list = list(self.acc_resources.columns)
+        self.resources_list.remove('id')
+        self.resources_list.remove('new_spec')
+
+        for col in self.resources_list:
+            for i, row in self.acc_resources.iterrows():
+                if col in specs_param[row['new_spec']]:
+                    self.acc_resources.at[i,col] = specs_param[row['new_spec']][col]
+
+        # Get the diameter
+        self.df_acc['diameter_clean'] = self.df_acc['Estimated Diameter (m)'].apply(clean_diameter_acc)
+
+        # Get the volume
+        self.df_acc['est_volume'] = 4/3 * math.pi * ((self.df_acc['diameter_clean'] / 2) ** 3)
+
+        # Get the density
+        def get_density(x):
+            general_spec = Parameters().tholen_smasii_map[x]
+            return Parameters().TYPE_DENSITY_MAP[general_spec]
+
+        self.df_acc['est_density'] = self.df_acc['new_spec'].apply(get_density)
+
+        # Get the mass
+        self.df_acc['est_mass'] = ''
+
+        for i, row in self.df_acc.iterrows():
+            mass = row['est_volume'] * row['est_density'] / 6 * 1000
+            
+            # Add some random factor
+            mass = mass + (random.random() - .5) * 1e6
+            
+            if mass > 1e11:
+            # if it's huge, penalize it because the surface will be covered in ejecta, etc.
+            # and the goodies will be far beneath. Also, gravity well.
+                mass = mass * 1e-3
+            
+            self.df_acc.at[i,"est_mass"] = mass
+
+        self.df_acc['est_mass'] = self.df_acc['est_mass'].astype('float64')
+        pass
+
+    def estimate_total_acc_resources(self):    
+        # Estimate available resources for each asteroid in kg
+        acc_total_resources = pd.merge(self.acc_resources, self.df_acc[['id', 'est_mass']], on='id', how='inner')
+
+        for i in self.resources_list:
+            acc_total_resources[i] = acc_total_resources[i].apply(lambda x: 0 if x == '' else x)
+            acc_total_resources[f'{i}_kg'] = acc_total_resources[i] * acc_total_resources['est_mass']
+        
+        acc_total_resources = acc_total_resources.drop(columns=self.resources_list)
+
+        # Get path
+        rootdir = os.path.dirname(__file__)
+        path_to_save = os.path.join(rootdir, 'data', 'acc_total_resources_test1.csv')
+        
+        acc_total_resources.to_csv(path_to_save)
+        print('acc_total_resources csv saved!')
+        pass
+
+
+if __name__ == "__main__":
+    
+    asteroid = Asteroids()
+
+    asteroid.get_saved_df()
+    asteroid.get_spec()
+    asteroid.compute_mass()
+    asteroid.estimate_total_acc_resources()
