@@ -1,10 +1,12 @@
-# Data analysis
-- Document here the project: asteroid_mining
-- Description: Project Description
-- Data Source:
-- Type of analysis:
+# Data mining of asteroids data
+- Description: Estimate the total quantity of resources available in accessible asteroids
+- Data Source: 
+    JPL database: https://ssd.jpl.nasa.gov/sbdb_query.cgi#x
+    Asterank complete database named asterank: https://github.com/typpo/asterank
+    CNEOS accessible asteroids database: https://cneos.jpl.nasa.gov/nhats/
 
-Please document the project the better you can.
+- My objective was to determine the total quantity in kg of different resources in accessible asteroids, after being inspired by the asterank project availbale on GitHub.
+- I estimate the mass of each accessible asteroid and compute the quantity of resources from the asteroid' spectral classification.  
 
 # Startup the project
 
@@ -15,33 +17,6 @@ Create virtualenv and install the project:
 sudo apt-get install virtualenv python-pip python-dev
 deactivate; virtualenv ~/venv ; source ~/venv/bin/activate ;\
     pip install pip -U; pip install -r requirements.txt
-```
-
-Unittest test:
-```bash
-make clean install test
-```
-
-Check for asteroid_mining in gitlab.com/{group}.
-If your project is not set please add it:
-
-- Create a new project on `gitlab.com/{group}/asteroid_mining`
-- Then populate it:
-
-```bash
-##   e.g. if group is "{group}" and project_name is "asteroid_mining"
-git remote add origin git@github.com:{group}/asteroid_mining.git
-git push -u origin master
-git push -u origin --tags
-```
-
-Functionnal test with a script:
-
-```bash
-cd
-mkdir tmp
-cd tmp
-asteroid_mining-run
 ```
 
 # Install
